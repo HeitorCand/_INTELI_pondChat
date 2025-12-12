@@ -1,0 +1,11 @@
+google-generativeai
+python-dotenv
+faiss-cpu
+langchain
+pandas
+numpy
+scikit-learn
+regex
+python-dateutil
+tqdm
+nltk
