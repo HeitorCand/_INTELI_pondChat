@@ -1,29 +1,29 @@
 # agents/transaction_agent.py
 """
-Transaction agent: loads cleaned CSV and applies policy rules (direct violations).
-Uses data/transacoes_bancarias.csv produced by scripts/ingest_transactions.py
+Agente de Transações: carrega CSV limpo e aplica regras de política (violações diretas).
+Usa data/transacoes_bancarias.csv produzido por scripts/ingest_transactions.py
 """
 import pandas as pd
 import re
 from pathlib import Path
 
 DATA_CSV = Path("data/transacoes_bancarias.csv")
-POLICY_FILE = Path("data/politica_compliance.txt")  # for reference. :contentReference[oaicite:3]{index=3}
+POLICY_FILE = Path("data/politica_compliance.txt")  # para referência
 
-# RULES: basic examples mapped from policy
+# REGRAS: exemplos básicos mapeados da política
 def rule_large_expense(row):
-    # Any single expense > 500 -> requires PO
+    # Qualquer despesa única > 500 -> requer PO
     return row['amount'] > 500.0
 
 def rule_event_category_above_5(row):
-    # "Outros" not allowed above 5 USD — approximate by description containing 'outros' or 'diversos'
+    # "Outros" não permitido acima de 5 USD — aproximar pela descrição contendo 'outros' ou 'diversos'
     desc = str(row.get("description","")).lower()
     if ("outros" in desc or "diversos" in desc) and row['amount'] > 5.0:
         return True
     return False
 
 def rule_prohibited_item(row):
-    # List of forbidden items from Section 3
+    # Lista de itens proibidos da Seção 3
     desc = str(row.get("description","")).lower() + " " + str(row.get("beneficiary","")).lower()
     forbidden = ["stripper","algema","algemas","kit de mágica","magica","armas","nunchaku","katana","baralho marcado","pombos"]
     for f in forbidden:
@@ -40,9 +40,9 @@ RULES = [
 class TransactionAgent:
     def __init__(self):
         if not DATA_CSV.exists():
-            raise RuntimeError("Clean transactions CSV not found. Run scripts/ingest_transactions.py first.")
+            raise RuntimeError("CSV de transações limpo não encontrado. Execute scripts/ingest_transactions.py primeiro.")
         self.df = pd.read_csv(DATA_CSV, parse_dates=["date"], dayfirst=False)
-        # ensure amount numeric
+        # garante que amount seja numérico
         self.df['amount'] = self.df['amount'].astype(float)
 
     def run_rules(self):
@@ -62,7 +62,7 @@ class TransactionAgent:
                             "description": row.get("description")
                         })
                 except Exception as e:
-                    print("Error evaluating rule", r["id"], e)
+                    print("Erro ao avaliar regra", r["id"], e)
         return violations
 
 if __name__ == "__main__":

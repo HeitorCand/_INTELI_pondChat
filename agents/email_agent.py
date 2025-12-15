@@ -1,7 +1,7 @@
 # agents/email_agent.py
 """
-Email agent: search emails, return suspicious messages and detect conspiracy.
-Uses vectorstore/emails.
+Agente de Email: busca e-mails, retorna mensagens suspeitas e detecta conspiração.
+Usa vectorstore/emails.
 """
 from pathlib import Path
 from core.embeddings import embed_text
@@ -23,15 +23,15 @@ SUSPICIOUS_KEYWORDS = [
 class EmailAgent:
     def __init__(self, k=6):
         if not VSTORE_INDEX.exists():
-            raise RuntimeError("Emails vectorstore not found. Run scripts/ingest_emails.py first.")
-        # load index
+            raise RuntimeError("Vectorstore de emails não encontrado. Execute scripts/ingest_emails.py primeiro.")
+        # carrega índice
         import pickle
         with open(VSTORE_META, "rb") as f:
             metas = pickle.load(f)
         dim = 1536
         self.store = FaissIndex(dim, VSTORE_INDEX, VSTORE_META)
         self.k = k
-        # pre-load parsed file
+        # pré-carrega arquivo parseado
         self.parsed = []
         if PARSED_JSONL.exists():
             with PARSED_JSONL.open("r", encoding="utf-8") as fo:
@@ -52,7 +52,7 @@ class EmailAgent:
         top_k = top_k or self.k
         qvec = embed_text(query)
         hits = self.store.query(qvec, k=top_k)
-        # group hits by email_id
+        # agrupa resultados por email_id
         grouped = {}
         for h in hits:
             meta = h["meta"]
@@ -60,10 +60,10 @@ class EmailAgent:
             grouped.setdefault(eid, {"score":[], "chunks":[]})
             grouped[eid]["score"].append(h["score"])
             grouped[eid]["chunks"].append(meta)
-        # format results
+        # formata resultados
         results = []
         for eid, val in grouped.items():
-            # find parsed email entry
+            # encontra entrada de email parseado
             email = next((x for x in self.parsed if x["id"]==eid), None)
             results.append({"email":email, "chunks":val["chunks"], "avg_score": sum(val["score"])/len(val["score"])})
         results.sort(key=lambda x: x["avg_score"])
@@ -71,17 +71,17 @@ class EmailAgent:
 
     def detect_conspiracy(self):
         """
-        Returns True if conspiracy indicators present regarding Toby (explicit mentions / operation).
+        Retorna True se indicadores de conspiração estiverem presentes em relação ao Toby (menções explícitas / operação).
         """
-        # naive: check for keywords and also semantic search for "operação fênix" / "Toby"
+        # simples: verifica palavras-chave e também busca semântica por "operação fênix" / "Toby"
         kw_matches = self.search_keyword()
         sem = self.semantic_search("Toby Flenderson conspiração operação fênix", top_k=10)
-        # consider conspiracy present if kw_matches non-empty OR sem results with chunks mentioning operation/toby
+        # considera conspiração presente se kw_matches não vazio OU resultados semânticos com chunks mencionando operação/toby
         evidence = []
         for m in kw_matches:
             evidence.append({"type":"keyword","email":m["email"],"hits":m["hits"]})
         for s in sem:
-            # look at chunks
+            # analisa chunks
             for c in s["chunks"]:
                 txt = c.get("text","").lower()
                 if "toby" in txt or "fênix" in txt or "operação" in txt or "destroy" in txt or "destruir" in txt:

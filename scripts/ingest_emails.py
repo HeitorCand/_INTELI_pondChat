@@ -1,10 +1,10 @@
 # scripts/ingest_emails.py
 """
-Parse data/emails.txt into JSONL and index email bodies into vectorstore/emails.
-Assumes emails in emails.txt are separated by lines starting with '----' or "De:" blocks.
+Faz o parsing de data/emails.txt para JSONL e indexa corpos de e-mail em vectorstore/emails.
+Pressupõe que os e-mails em emails.txt estão separados por linhas começando com '----' ou blocos "De:".
 """
 import sys, os
-# Add the workspace root to Python path
+# Adiciona a raiz do workspace ao path do Python
 workspace_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, workspace_root)
 
@@ -23,7 +23,7 @@ INDEX_PATH = VSTORE_DIR / "emails.index"
 META_PATH = VSTORE_DIR / "emails.meta.pkl"
 
 def parse_raw_emails(raw_text):
-    # Split by pattern: De: (Portuguese dataset). We'll create sections by 'De:' occurrences.
+    # Divide por padrão: De: (dataset em Português). Vamos criar seções por ocorrências de 'De:'.
     parts = re.split(r"\n-{3,}\n", raw_text)
     emails = []
     fallback_id = 0
@@ -31,15 +31,15 @@ def parse_raw_emails(raw_text):
         part = part.strip()
         if not part:
             continue
-        # Extract headers: De:, Para:, Data:, Assunto:
+        # Extrai cabeçalhos: De:, Para:, Data:, Assunto:
         m_from = re.search(r"De:\s*(.*)", part)
         m_to = re.search(r"Para:\s*(.*)", part)
         m_date = re.search(r"Data:\s*(.*)", part)
         m_subject = re.search(r"Assunto:\s*(.*)", part)
-        # body is everything after the first blank line following Subject line
-        # naive body extraction:
+        # corpo é tudo após a primeira linha em branco seguindo a linha de Assunto
+        # extração simples do corpo:
         body = part
-        # remove header lines
+        # remove linhas de cabeçalho
         body = re.sub(r"De:.*\n", "", body)
         body = re.sub(r"Para:.*\n", "", body)
         body = re.sub(r"Data:.*\n", "", body)
@@ -60,11 +60,11 @@ def parse_raw_emails(raw_text):
 def ingest_emails():
     raw = RAW.read_text(encoding="utf-8")
     emails = parse_raw_emails(raw)
-    # write jsonl
+    # escreve jsonl
     with PARSED.open("w", encoding="utf-8") as fo:
         for e in emails:
             fo.write(json.dumps(e, ensure_ascii=False) + "\n")
-    # create embeddings per body chunk (split long bodies)
+    # cria embeddings por chunk do corpo (divide corpos longos)
     vectors = []
     metas = []
     splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=80)
@@ -75,12 +75,12 @@ def ingest_emails():
             vectors.append(vec)
             metas.append({"source":"emails.txt","email_id":e["id"],"chunk_id":i,"text":chunk,"subject":e.get("subject"),"from":e.get("from"),"date":e.get("date")})
     if len(vectors)==0:
-        print("No email text found to index.")
+        print("Nenhum texto de e-mail encontrado para indexar.")
         return
     dim = len(vectors[0])
     fi = FaissIndex(dim, INDEX_PATH, META_PATH)
     fi.build(vectors, metas)
-    print(f"Ingested {len(vectors)} email chunks into {INDEX_PATH}, parsed JSONL at {PARSED}")
+    print(f"Ingeridos {len(vectors)} chunks de e-mail em {INDEX_PATH}, JSONL parseado em {PARSED}")
 
 if __name__ == "__main__":
     ingest_emails()

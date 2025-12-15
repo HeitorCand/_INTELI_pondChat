@@ -1,6 +1,6 @@
 # agents/rag_policy_agent.py
 """
-RAG agent to answer questions about politica_compliance.txt using vectorstore/policy
+Agente RAG para responder perguntas sobre politica_compliance.txt usando vectorstore/policy
 """
 from pathlib import Path
 from core.embeddings import embed_text
@@ -14,12 +14,12 @@ VSTORE_META = Path("vectorstore/policy/policy.meta.pkl")
 class RAGPolicyAgent:
     def __init__(self, k=4):
         if not VSTORE_INDEX.exists():
-            raise RuntimeError("Policy vectorstore not found. Run scripts/ingest_policy.py first.")
-        # infer dim by reading index file? We'll load meta to get one chunk and embed to get dim
+            raise RuntimeError("Vectorstore de política não encontrado. Execute scripts/ingest_policy.py primeiro.")
+        # inferir dim lendo arquivo de índice? Vamos carregar meta para obter um chunk e embedar para obter dim
         import pickle
         with open(VSTORE_META, "rb") as f:
             metas = pickle.load(f)
-        self.dim = 1536 if len(metas)==0 else 1536  # placeholder (embedding dim dynamic in production)
+        self.dim = 1536 if len(metas)==0 else 1536  # placeholder (dim de embedding dinâmica em produção)
         self.store = FaissIndex(self.dim, VSTORE_INDEX, VSTORE_META)
         self.k = k
 

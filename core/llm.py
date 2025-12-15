@@ -9,7 +9,7 @@ MODEL_NAME = os.getenv("GEMINI_CHAT_MODEL","gemini-1.5-flash")
 
 def chat_completion(messages, temperature=0.0, max_tokens=800):
     """
-    messages: lista de dicts {role, content}
+    Mensagens: lista de dicts {role, content}
     """
     history = []
     for m in messages:

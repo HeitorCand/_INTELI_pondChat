@@ -9,7 +9,7 @@ EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL","text-embedding-004")
 
 def embed_text(text:str):
     """
-    Retorna embedding Vetorial usando Gemini.
+    Retorna embedding vetorial usando Gemini.
     """
     resp = genai.embed_content(
         model=EMBED_MODEL,

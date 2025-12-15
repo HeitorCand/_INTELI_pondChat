@@ -1,9 +1,9 @@
 # scripts/ingest_policy.py
 """
-Ingest politica_compliance.txt into vectorstore/policy using embeddings.
+Ingere politica_compliance.txt em vectorstore/policy usando embeddings.
 """
 import sys, os
-# Add the workspace root to Python path
+# Adiciona a raiz do workspace ao path do Python
 workspace_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, workspace_root)
 
@@ -33,7 +33,7 @@ def ingest_policy():
     dim = len(vectors[0])
     fi = FaissIndex(dim, INDEX_PATH, META_PATH)
     fi.build(vectors, metas)
-    print(f"Ingested {len(chunks)} chunks into {INDEX_PATH}")
+    print(f"Ingeridos {len(chunks)} chunks em {INDEX_PATH}")
 
 if __name__ == "__main__":
     ingest_policy()

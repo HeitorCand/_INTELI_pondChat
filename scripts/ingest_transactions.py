@@ -1,10 +1,10 @@
 # scripts/ingest_transactions.py
 """
-Simple CSV loader that normalizes the transactions and writes a cleaned CSV for agents.
-Assumes CSV contains at least: date, description, beneficiary, amount
+Carregador CSV simples que normaliza as transações e escreve um CSV limpo para os agentes.
+Pressupõe que o CSV contém pelo menos: date, description, beneficiary, amount
 """
 import sys, os
-# Add the workspace root to Python path
+# Adiciona a raiz do workspace ao path do Python
 workspace_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, workspace_root)
 
@@ -22,7 +22,7 @@ def normalize_amount(x):
     try:
         return float(x)
     except:
-        # try european format
+        # tenta formato europeu
         x = x.replace(".", "").replace(",", ".")
         try:
             return float(x)
@@ -31,14 +31,14 @@ def normalize_amount(x):
 
 def ingest_transactions():
     df = pd.read_csv(IN_CSV)
-    # normalize columns heuristic
-    # lower case colnames
+    # heurística de normalização de colunas
+    # nomes de colunas em minúsculas
     df.columns = [c.strip().lower() for c in df.columns]
-    # required columns: date, description, beneficiary, amount
-    # try to find amount-like column
+    # colunas obrigatórias: date, description, beneficiary, amount
+    # tenta encontrar coluna tipo amount
     amount_cols = [c for c in df.columns if 'amount' in c or 'valor' in c or 'amount' in c or 'value' in c]
     if len(amount_cols)==0:
-        # try to guess numeric column
+        # tenta adivinhar coluna numérica
         numeric_cols = df.select_dtypes(include='number').columns
         amount_col = numeric_cols[0] if len(numeric_cols)>0 else df.columns[-1]
     else:
@@ -49,19 +49,19 @@ def ingest_transactions():
         df['date'] = pd.to_datetime(df[date_cols[0]], errors='coerce')
     else:
         df['date'] = pd.to_datetime('today')
-    # beneficiary heuristics
+    # heurísticas de beneficiário
     beneficiary_cols = [c for c in df.columns if 'benef' in c or 'supplier' in c or 'payee' in c or 'destinatario' in c]
     if len(beneficiary_cols)>0:
         df['beneficiary'] = df[beneficiary_cols[0]]
     else:
-        # try description split
+        # tenta dividir descrição
         if 'description' in df.columns:
             df['beneficiary'] = df['description'].apply(lambda x: str(x).split()[0])
         else:
             df['beneficiary'] = 'unknown'
-    # save cleaned CSV
+    # salva CSV limpo
     df.to_csv(OUT_CSV, index=False)
-    print(f"Normalized transactions written to {OUT_CSV}")
+    print(f"Transações normalizadas escritas em {OUT_CSV}")
 
 if __name__ == "__main__":
     ingest_transactions()
