@@ -1,6 +1,7 @@
 # Dunder Auditor
 
 video: https://drive.google.com/file/d/1tg4m59fm3Yie2othyW0yi-bSQQ-J2qZJ/view?usp=sharing 
+(sei que vazei a chave KKKKKKKK, mas já desativei ela)
 
 Projeto: Chatbot/Agentes de Auditoria para Dunder Mifflin (Scranton).
 
